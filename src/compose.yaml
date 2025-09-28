@@ -1,0 +1,6 @@
+﻿services:
+  departureboard:
+    image: departureboard
+    build:
+      context: .
+      dockerfile: DepartureBoard/Dockerfile

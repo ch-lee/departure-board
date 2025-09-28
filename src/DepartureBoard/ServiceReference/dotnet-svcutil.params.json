@@ -1,0 +1,15 @@
+{
+  "providerId": "Microsoft.Tools.ServiceModel.Svcutil",
+  "version": "8.0.0",
+  "options": {
+    "inputs": [
+      "https://lite.realtime.nationalrail.co.uk/OpenLDBWS/wsdl.aspx?ver=2021-11-01"
+    ],
+    "namespaceMappings": [
+      "*, NationalRail.OpenLdb"
+    ],
+    "outputFile": "NationalRailClient.cs",
+    "targetFramework": "net9.0",
+    "typeReuseMode": "All"
+  }
+}
