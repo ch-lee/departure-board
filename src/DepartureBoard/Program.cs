@@ -11,7 +11,20 @@ using Microsoft.Extensions.Logging;
 var services = new ServiceCollection();
 services.AddLogging(builder => builder.AddConsole());
 services.AddHttpClient();
+services.AddLogging(builder =>
+{
+    builder.ClearProviders();
+    builder.AddSimpleConsole(options =>
+    {
+        options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff ";
+        options.UseUtcTimestamp = true;   // or false for local time
+        options.SingleLine = true;     // optional: make each log a single line
+    });
+
+    builder.SetMinimumLevel(LogLevel.Information);
+});
 var provider = services.BuildServiceProvider();
+
 
 var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("Program");
 var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
@@ -25,9 +38,13 @@ var routes = config.GetSection("Routes").Get<Route[]>() ?? [];
 
 var networkRailAccessToken =  Environment.GetEnvironmentVariable("NETWORK_RAIL_ACCESS_TOKEN");
 
+logger.LogInformation($"NETWORK_RAIL_ACCESS_TOKEN: {networkRailAccessToken.Substring(0,5)}******");
+
 // env var for testing. Set this to true to avoid sending to TRMNL, because it has a 5 min rate limit.
 // This is to test that at the very least it outputs to logs.
 var skipTrmnlSendEnvVar = Environment.GetEnvironmentVariable("SKIP_SEND_TO_TRMNL");
+logger.LogInformation($"SKIP_SEND_TRMNL: {skipTrmnlSendEnvVar}");
+
 var skipTrmnlSend = true;
 
 if (skipTrmnlSendEnvVar is not null)
@@ -37,6 +54,7 @@ if (skipTrmnlSendEnvVar is not null)
 }
 
 var trmnlWebhookUrl = Environment.GetEnvironmentVariable("TRMNL_WEBHOOK_URL");
+logger.LogInformation($"TRMNL_WEBHOOK_URL: {trmnlWebhookUrl}");
 if (trmnlWebhookUrl is null)
 {
     logger.LogError(
@@ -91,8 +109,9 @@ if (departureResults.Any())
     var serialize = JsonSerializer.Serialize(trmnlWebhookRequest);
     
     var utf8Bytes = System.Text.Encoding.UTF8.GetBytes(serialize);
-    logger.LogInformation("Payload size: {ByteCount} bytes", utf8Bytes.Length);
     logger.LogInformation(serialize);
+    logger.LogInformation("Payload size: {ByteCount} bytes", utf8Bytes.Length);
+    
 
     if (utf8Bytes.Length > 2000)
     {
