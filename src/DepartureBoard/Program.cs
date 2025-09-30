@@ -72,7 +72,7 @@ async Task<TrainDepartureResult> GetDepartures(string fromStationCode, string to
 {
     var nationalRailService = new NationalRailService(networkRailAccessToken);
 
-    var results = await nationalRailService.GetDeparturesAsync(fromStationCode, toStationCode);
+    var results = await nationalRailService.GetDeparturesAsync(fromStationCode, toStationCode, 3);
 
     return results;
 }
