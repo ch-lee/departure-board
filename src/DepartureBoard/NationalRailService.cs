@@ -44,6 +44,8 @@ public class TrainDeparture
 
     [JsonPropertyName("last_estimated_time")]
     public string Last => Stops.Last().ScheduledTime;
+    
+    public TimeOnly ScheduledTimeOnly => TimeOnly.Parse(ScheduledTime);
 }
 
 public interface ITrainDepartureService

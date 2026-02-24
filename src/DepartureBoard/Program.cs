@@ -20,7 +20,6 @@ services.AddLogging(builder =>
         options.UseUtcTimestamp = true;   // or false for local time
         options.SingleLine = true;     // optional: make each log a single line
     });
-
     builder.SetMinimumLevel(LogLevel.Information);
 });
 var provider = services.BuildServiceProvider();
@@ -37,13 +36,18 @@ var config = new ConfigurationBuilder()
 var routes = config.GetSection("Routes").Get<Route[]>() ?? [];
 
 var networkRailAccessToken =  Environment.GetEnvironmentVariable("NETWORK_RAIL_ACCESS_TOKEN");
+var timeZoneIdentifier = Environment.GetEnvironmentVariable("TIME_ZONE");
+var trmnlWebhookUrl = Environment.GetEnvironmentVariable("TRMNL_WEBHOOK_URL");
+logger.LogInformation($"TRMNL_WEBHOOK_URL: {trmnlWebhookUrl}");
+var skipTrmnlSendEnvVar = Environment.GetEnvironmentVariable("SKIP_SEND_TO_TRMNL");
 
 logger.LogInformation($"NETWORK_RAIL_ACCESS_TOKEN: {networkRailAccessToken.Substring(0,5)}******");
+logger.LogInformation($"SKIP_SEND_TRMNL: {skipTrmnlSendEnvVar}");
+
 
 // env var for testing. Set this to true to avoid sending to TRMNL, because it has a 5 min rate limit.
 // This is to test that at the very least it outputs to logs.
-var skipTrmnlSendEnvVar = Environment.GetEnvironmentVariable("SKIP_SEND_TO_TRMNL");
-logger.LogInformation($"SKIP_SEND_TRMNL: {skipTrmnlSendEnvVar}");
+
 
 var skipTrmnlSend = true;
 
@@ -53,8 +57,6 @@ if (skipTrmnlSendEnvVar is not null)
     logger.LogInformation("SKIP_SEND_TO_TRMNL has been set to {skipTrmnlSend}", skipTrmnlSend);
 }
 
-var trmnlWebhookUrl = Environment.GetEnvironmentVariable("TRMNL_WEBHOOK_URL");
-logger.LogInformation($"TRMNL_WEBHOOK_URL: {trmnlWebhookUrl}");
 if (trmnlWebhookUrl is null)
 {
     logger.LogError(
@@ -90,19 +92,27 @@ async Task<TrainDepartureResult> GetDepartures(string fromStationCode, string to
 {
     var nationalRailService = new NationalRailService(networkRailAccessToken);
 
-    var results = await nationalRailService.GetDeparturesAsync(fromStationCode, toStationCode, 3);
+    var results = await nationalRailService.GetDeparturesAsync(fromStationCode, toStationCode, 5);
 
     return results;
 }
 
 if (departureResults.Any())
 {
+    var now = TimeOnly.FromDateTime(DateTime.Now.AddMinutes(5)); // compare future departues with 5 mins ahead in the future
+    
     var trmnlWebhookRequest = new TrmnlWebhookRequest<TrainDepartureResult>
     {
         MergeVariables = new TrainDepartureResult
         {
             GeneratedAt = DateTime.Now,
-            Departures = departureResults.SelectMany(x => x.Departures).OrderBy(x=>x.ScheduledTime).ToList()
+            Departures = departureResults
+                .SelectMany(x => x.Departures)
+                .Where(x => x.ScheduledTimeOnly > now) // select future departures
+                .OrderBy(x=>x.ScheduledTimeOnly)
+                .Take(4) //only retrieve 4 to display on TRMNL as thats how much it can fit
+                .ToList()
+                
         }
     };
 
