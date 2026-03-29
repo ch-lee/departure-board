@@ -108,7 +108,7 @@ if (departureResults.Any())
             GeneratedAt = DateTime.Now,
             Departures = departureResults
                 .SelectMany(x => x.Departures)
-                .Where(x => x.ScheduledTimeOnly > now) // select future departures
+                .Where(x => x.ScheduledTimeOnly > now.AddMinutes(10)) // select future departures
                 .OrderBy(x=>x.ScheduledTimeOnly)
                 .Take(4) //only retrieve 4 to display on TRMNL as thats how much it can fit
                 .ToList()

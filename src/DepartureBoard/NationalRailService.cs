@@ -81,7 +81,7 @@ public class NationalRailService
                 DestinationCode = x.destination.First().crs,
                 ExpectedTime =
                     x.etd.Contains(":")
-                        ? $"expected @ {x.etd}"
+                        ? $"eta {x.etd}"
                         : x.etd, // if it's a time, then it's the expected time, otherwise it will be a string for 'on time' or 'cancelled' 
                 ScheduledTime = x.std,
                 Operator = x.@operator,
