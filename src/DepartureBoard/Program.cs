@@ -99,7 +99,7 @@ async Task<TrainDepartureResult> GetDepartures(string fromStationCode, string to
 
 if (departureResults.Any())
 {
-    var now = TimeOnly.FromDateTime(DateTime.Now.AddMinutes(5)); // compare future departues with 5 mins ahead in the future
+    var now = TimeOnly.FromDateTime(DateTime.Now.AddMinutes(15)); // compare future departures with 5 mins ahead in the future
     
     var trmnlWebhookRequest = new TrmnlWebhookRequest<TrainDepartureResult>
     {
@@ -108,7 +108,7 @@ if (departureResults.Any())
             GeneratedAt = DateTime.Now,
             Departures = departureResults
                 .SelectMany(x => x.Departures)
-                .Where(x => x.ScheduledTimeOnly > now.AddMinutes(10)) // select future departures
+                .Where(x => x.ScheduledTimeOnly > now)
                 .OrderBy(x=>x.ScheduledTimeOnly)
                 .Take(4) //only retrieve 4 to display on TRMNL as thats how much it can fit
                 .ToList()
