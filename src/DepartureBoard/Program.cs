@@ -99,7 +99,7 @@ async Task<TrainDepartureResult> GetDepartures(string fromStationCode, string to
 
 if (departureResults.Any())
 {
-    var now = TimeOnly.FromDateTime(DateTime.Now.AddMinutes(15)); // compare future departures with 5 mins ahead in the future
+    var now = TimeOnly.FromDateTime(DateTime.Now.AddMinutes(25)); // compare future departures with 25 mins ahead in the future
     
     var trmnlWebhookRequest = new TrmnlWebhookRequest<TrainDepartureResult>
     {
